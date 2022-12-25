@@ -11,6 +11,7 @@ on:
         options:
         - swatinem
         - sccache
+        - home # only cache ~/.cargo
         - full # cache ~/.cargo/ and target/
       restore_mtime:
         description: 'Restore mtime to commit time'
@@ -21,7 +22,7 @@ env:
   CARGO_INCREMENTAL: 0
 
 jobs:
-  swatinem-raw:
+  swatinem:
     runs-on: ubuntu-latest
     if:  ${{ inputs.action == 'swatinem' }}
     steps:
@@ -32,7 +33,7 @@ jobs:
           override: true
       - uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: swatinem-raw
+          prefix-key: swatinem
       - uses: chetan/git-restore-mtime-action@v1
         if: ${{ inputs.restore_mtime }}
       - run: cargo test --locked --no-run
@@ -62,6 +63,28 @@ jobs:
             ~/.cargo/git/db/
             .sccache/
           key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+      - uses: chetan/git-restore-mtime-action@v1
+        if: ${{ inputs.restore_mtime }}
+      - run: cargo test --locked --no-run
+      - run: cargo test --locked --no-fail-fast
+      - run: cargo clippy --locked --workspace --tests --no-deps -- -D warnings
+
+  home:
+    runs-on: ubuntu-latest
+    if:  ${{ inputs.action == 'home' }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: ${{ runner.os }}-home-${{ hashFiles('**/Cargo.lock') }}
       - uses: chetan/git-restore-mtime-action@v1
         if: ${{ inputs.restore_mtime }}
       - run: cargo test --locked --no-run
