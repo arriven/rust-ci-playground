@@ -16,7 +16,7 @@ on:
         required: true 
         type: boolean 
       home_and_target: # cache recommended directories in ~/.cargo/ and target/
-        description: 'Run full action'
+        description: 'Run home_and_target action'
         required: true 
         type: boolean 
       full: # cache full ~/.cargo/ and target/
