@@ -51,7 +51,6 @@ jobs:
     if:  ${{ inputs.sccache }}
     env:
       RUSTC_WRAPPER: sccache
-      SCCACHE_DIR: ".sccache"
       SCCACHE_CACHE_SIZE: "1G"
     steps:
       - uses: actions/checkout@v2
@@ -67,7 +66,7 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            .sccache/
+            ~/.cache/
           key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
       - uses: chetan/git-restore-mtime-action@v1
         if: ${{ inputs.restore_mtime }}
