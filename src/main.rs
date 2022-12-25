@@ -69,7 +69,7 @@ fn handler_internal(
     })?;
     let iter = state.prefix_iterator(key.as_bytes());
     let values = iter
-        .filter_map(|res| res.ok())
+        .filter_map(Result::ok)
         .map(|(_, v)| String::from_utf8(v.into()))
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| {
@@ -90,7 +90,7 @@ mod tests {
         let state = Arc::new(DB::open_default("test").unwrap());
         let response = handler_internal(state.clone(), Request{key:"test".to_owned(), value:"value".to_owned()}).unwrap();
         assert_eq!(response.values, vec!["value".to_owned()]);
-        let response = handler_internal(state.clone(), Request{key:"test".to_owned(), value:"value2".to_owned()}).unwrap();
+        let response = handler_internal(state, Request{key:"test".to_owned(), value:"value2".to_owned()}).unwrap();
         assert_eq!(response.values, vec!["value".to_owned(), "value2".to_owned()]);
     }
 }
