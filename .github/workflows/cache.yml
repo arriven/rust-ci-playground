@@ -11,11 +11,15 @@ on:
         description: 'Run sccache action'
         required: true 
         type: boolean 
-      home: # only cache ~/.cargo
+      home: # only cache recommended directories in ~/.cargo
         description: 'Run home action'
         required: true 
         type: boolean 
-      full: # cache ~/.cargo/ and target/
+      home_and_target: # cache recommended directories in ~/.cargo/ and target/
+        description: 'Run full action'
+        required: true 
+        type: boolean 
+      full: # cache full ~/.cargo/ and target/
         description: 'Run full action'
         required: true 
         type: boolean 
@@ -90,6 +94,29 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
           key: ${{ runner.os }}-home-${{ hashFiles('**/Cargo.lock') }}
+      - uses: chetan/git-restore-mtime-action@v1
+        if: ${{ inputs.restore_mtime }}
+      - run: cargo test --locked --no-run
+      - run: cargo test --locked --no-fail-fast
+      - run: cargo clippy --locked --workspace --tests --no-deps -- -D warnings
+
+  home_and_target:
+    runs-on: ubuntu-latest
+    if:  ${{ inputs.home_and_target }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-home_and_target-${{ hashFiles('**/Cargo.lock') }}
       - uses: chetan/git-restore-mtime-action@v1
         if: ${{ inputs.restore_mtime }}
       - run: cargo test --locked --no-run
