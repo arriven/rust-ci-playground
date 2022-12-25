@@ -3,16 +3,22 @@ name: cache
 on:
   workflow_dispatch:
     inputs:
-      action:
-        description: 'Action to run'
-        required: true
-        default: 'swatinem'
-        type: choice
-        options:
-        - swatinem
-        - sccache
-        - home # only cache ~/.cargo
-        - full # cache ~/.cargo/ and target/
+      swatinem:
+        description: 'Run swatinem action'
+        required: true 
+        type: boolean 
+      sccache:
+        description: 'Run sccache action'
+        required: true 
+        type: boolean 
+      home: # only cache ~/.cargo
+        description: 'Run home action'
+        required: true 
+        type: boolean 
+      full: # cache ~/.cargo/ and target/
+        description: 'Run full action'
+        required: true 
+        type: boolean 
       restore_mtime:
         description: 'Restore mtime to commit time'
         required: true 
@@ -24,7 +30,7 @@ env:
 jobs:
   swatinem:
     runs-on: ubuntu-latest
-    if:  ${{ inputs.action == 'swatinem' }}
+    if:  ${{ inputs.swatinem }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -42,7 +48,7 @@ jobs:
 
   sccache:
     runs-on: ubuntu-latest
-    if:  ${{ inputs.action == 'sccache' }}
+    if:  ${{ inputs.sccache }}
     env:
       RUSTC_WRAPPER: sccache
       SCCACHE_DIR: ".sccache"
@@ -71,7 +77,7 @@ jobs:
 
   home:
     runs-on: ubuntu-latest
-    if:  ${{ inputs.action == 'home' }}
+    if:  ${{ inputs.home }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -93,7 +99,7 @@ jobs:
 
   full:
     runs-on: ubuntu-latest
-    if:  ${{ inputs.action == 'full' }}
+    if:  ${{ inputs.full }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
