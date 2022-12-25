@@ -13,7 +13,7 @@ on:
         - sccache
         - full # cache ~/.cargo/ and target/
       restore_mtime:
-        description: 'True to restore mtime to commit time before running checks'
+        description: 'Restore mtime to commit time'
         required: true 
         type: boolean 
 
