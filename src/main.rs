@@ -1,4 +1,4 @@
-use std::{str::FromStr, sync::Arc};
+use std::{str::FromStr, sync::Arc, borrow::Borrow};
 
 use axum::{
     extract::{Json, State},
@@ -7,7 +7,7 @@ use axum::{
     Router,
 };
 use clap::Parser;
-use rocksdb::DB;
+use sled::Db;
 use serde::{Deserialize, Serialize};
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -30,7 +30,7 @@ async fn main() {
         .init();
 
     let args = Cli::parse();
-    let state = Arc::new(DB::open_default(args.db_path).unwrap());
+    let state = Arc::new(sled::open(args.db_path).unwrap());
     let app = Router::new().route("/", post(handler)).with_state(state);
 
     // run it with hyper on localhost:3000
@@ -52,25 +52,25 @@ struct Response {
 }
 
 async fn handler(
-    State(state): State<Arc<DB>>,
+    State(state): State<Arc<Db>>,
     Json(payload): Json<Request>,
 ) -> Result<Json<Response>, StatusCode> {
     Ok(Json(handler_internal(state, payload)?))
 }
 
 fn handler_internal(
-    state: Arc<DB>,
+    state: Arc<Db>,
     Request { key, value }: Request,
 ) -> Result<Response, StatusCode> {
     let item: Vec<_> = key.bytes().chain(value.bytes()).collect();
-    state.put(item, value.as_bytes()).map_err(|e| {
+    state.insert(item, value.as_bytes()).map_err(|e| {
         tracing::error!("failed to write to storage: {:?}", e);
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
-    let iter = state.prefix_iterator(key.as_bytes());
+    let iter = state.scan_prefix(key.as_bytes());
     let values = iter
         .filter_map(Result::ok)
-        .map(|(_, v)| String::from_utf8(v.into()))
+        .map(|(_, v)| std::str::from_utf8(v.borrow()).map(|s|s.to_owned()))
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| {
             tracing::error!("failed to read from storage: {:?}", e);
@@ -82,12 +82,10 @@ fn handler_internal(
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
-    use rocksdb::DB;
     use super::{Request, handler_internal};
     #[test]
     fn test_handler() {
-        DB::destroy(&Default::default(), "test").unwrap();
-        let state = Arc::new(DB::open_default("test").unwrap());
+        let state = Arc::new(sled::open("test").unwrap());
         let response = handler_internal(state.clone(), Request{key:"test".to_owned(), value:"value".to_owned()}).unwrap();
         assert_eq!(response.values, vec!["value".to_owned()]);
         let response = handler_internal(state, Request{key:"test".to_owned(), value:"value2".to_owned()}).unwrap();
