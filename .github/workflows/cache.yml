@@ -20,7 +20,7 @@ on:
         required: true 
         type: boolean 
       home_and_target_v2: # cache recommended directories in ~/.cargo/ and target/ + ~/.cargo/registry/src
-        description: 'Run home_and_target action'
+        description: 'Run home_and_target_v2 action'
         required: true 
         type: boolean 
       full: # cache full ~/.cargo/ and target/
