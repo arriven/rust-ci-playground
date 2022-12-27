@@ -20,23 +20,6 @@ Disclaimer: Github actions public runners can fluctuate in performance so I did 
 | swatinem | 250 mb | 15s | 9s | 1m 49s | 34s | 27s |
 | sccache | 170 mb | 25s | 5s | 2m 5s | 1m 1s | 1m 18s |
 
-### cached build with no mtime restore
-
-```sh
-$ cargo test --locked --no-run
-   Compiling linkmapper v0.1.0 (/home/runner/work/rust-ci-playground/rust-ci-playground)
-    Finished test [unoptimized + debuginfo] target(s) in 4.09s
-  Executable unittests src/main.rs (target/debug/deps/linkmapper-da17f15a9210ca29)
-```
-
-### cached build with mtime restore
-
-```sh
-$ cargo test --locked --no-run
-    Finished test [unoptimized + debuginfo] target(s) in 0.62s
-  Executable unittests src/main.rs (target/debug/deps/linkmapper-da17f15a9210ca29)
-```
-
 ## rocksdb
 
 | cache type | cache size | toolchain + job setup time | cache sync time | first run (no cache) | second run (cache, no mtime restore) | third run (cache, mtime restore) |
@@ -46,14 +29,3 @@ $ cargo test --locked --no-run
 | full | 830 mb | 15s | 26s | 9m 38s | 56s | 47s |
 | swatinem | 730 mb | 15s | 23s | 9m 0s | 8m 26s | 10m 16s |
 | sccache | 490 mb | 25s | 10s | 13m 58s | 2m 10s | 2m 50s |
-
-### cached build with ~/.cargo/registry/src removed
-
-```sh
-$ cargo test --locked --no-run
-   Compiling librocksdb-sys v0.8.0+7.4.4
-   Compiling rocksdb v0.19.0
-   Compiling linkmapper v0.1.0 (/home/runner/work/rust-ci-playground/rust-ci-playground)
-    Finished test [unoptimized + debuginfo] target(s) in 8m 27s
-  Executable unittests src/main.rs (target/debug/deps/linkmapper-6393465c78bf12f8)
-```
